@@ -1,12 +1,12 @@
 import UIKit
 
-public class TimePicker: UIPickerView {
+public class TimePicker: UIPickerView, UIPickerViewDataSource, UIPickerViewDelegate {
     private let maxRowCount = 24000
     private var wheelMargin: Int { return maxRowCount / 2 }
     private var date: Date!
-    public var timeZone = TimeZone.local
-    private let _gregCal = Calendar(calendarIdentifier: Calendar.Identifier.gregorian)!
+    public var timeZone = TimeZone.current
     private var calendar: Calendar {
+        var _gregCal = Calendar(identifier: .gregorian)
         _gregCal.locale = locale
         _gregCal.timeZone = self.timeZone
         return _gregCal
@@ -31,7 +31,7 @@ public class TimePicker: UIPickerView {
     
     private var _timeFormat: TimeFormat?
     
-    public var timeSelectionHandler: ((date:Date) -> Void)?
+    public var timeSelectionHandler: ((Date) -> Void)?
     private var localeChangeObserver: AnyObject!
     
     required public init?(coder aDecoder: NSCoder) {
@@ -48,7 +48,7 @@ public class TimePicker: UIPickerView {
         dataSource = self
         delegate = self
         setDate(Date(), animated: false)
-        localeChangeObserver = NotificationCenter.default.addObserver(forName: Locale.currentLocaleDidChangeNotification, object: nil, queue: nil, using: { [weak self] (noti) in
+        localeChangeObserver = NotificationCenter.default.addObserver(forName: NSLocale.currentLocaleDidChangeNotification, object: nil, queue: nil, using: { [weak self] (noti) in
             guard let ss = self else { return }
             ss.refreshTimeFormat()
             ss.reloadAllComponents()
@@ -58,16 +58,14 @@ public class TimePicker: UIPickerView {
     
     public func setDate(_ date: Date, animated: Bool) {
         self.date = date
-        let hour = calendar.component(Calendar.Unit.hour, from: date)
-        let minute = calendar.component(Calendar.Unit.minute, from: date)
-        let second = calendar.component(Calendar.Unit.second, from: date)
+        let hour = calendar.component(.hour, from: date)
+        let minute = calendar.component(.minute, from: date)
+        let second = calendar.component(.second, from: date)
         selectRow(hour + wheelMargin, inComponent: hmsIndex.hour, animated: animated)
         selectRow(minute + wheelMargin, inComponent: hmsIndex.minute, animated: animated)
         selectRow(second + wheelMargin, inComponent: hmsIndex.second, animated: animated)
     }
-}
 
-private extension TimePicker {
     private func refreshTimeFormat() {
         _timeFormat = nil
         let _ = timeFormat
@@ -113,9 +111,7 @@ private extension TimePicker {
         }
         return "\(someInt)"
     }
-}
-
-extension TimePicker: UIPickerViewDataSource {
+    
     public func numberOfComponents(in pickerView: UIPickerView) -> Int {
         switch timeFormat {
         case .twentyFourHours(_):
@@ -135,9 +131,7 @@ extension TimePicker: UIPickerViewDataSource {
             return maxRowCount
         }
     }
-}
 
-extension TimePicker: UIPickerViewDelegate {
     public func pickerView(_ pickerView: UIPickerView, widthForComponent component: Int) -> CGFloat {
         return 60
     }
@@ -163,7 +157,7 @@ extension TimePicker: UIPickerViewDelegate {
     }
     
     public func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-        if let ampmi = AMPMIndex where ampmi == component {
+        if let ampmi = AMPMIndex, ampmi == component {
             return row == 0 ? calendar.amSymbol : calendar.pmSymbol
         }
         
@@ -214,13 +208,13 @@ extension TimePicker: UIPickerViewDelegate {
         let minute = pickerView.selectedRow(inComponent: hmsIndex.minute) % 60
         let hour = pickerView.selectedRow(inComponent: hmsIndex.hour) % 24
         
-        var comps = calendar.components([.year, .month, .day], from: date)
+        var comps = calendar.dateComponents([.year, .month, .day], from: date)
         comps.hour = hour
         comps.minute = minute
         comps.second = second
         guard let newDate = calendar.date(from: comps) else { return }
         self.date = newDate
-        self.timeSelectionHandler?(date: newDate)
+        self.timeSelectionHandler?(newDate)
     }
     
     private func syncAMPMAndHourComponent() {

@@ -12,7 +12,7 @@ import PlaygroundSupport
 class TimePickerTestViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white()
+        view.backgroundColor = .white
         
         
         //default locale == system locale
@@ -25,14 +25,14 @@ class TimePickerTestViewController: UIViewController {
         //Korean locale: AM/PM goes first
         let timePickerKoKR = TimePicker(frame: .zero)
         timePickerKoKR.frame.origin.y += 200
-        timePickerKoKR.locale = Locale(localeIdentifier: "ko-KR")
+        timePickerKoKR.locale = Locale(identifier: "ko-KR")
         view.addSubview(timePickerKoKR)
         
         
         //UK locale: 24hours
         let timePickerUK = TimePicker(frame: .zero)
         timePickerUK.frame.origin.y += 400
-        timePickerUK.locale = Locale(localeIdentifier: "en-UK")
+        timePickerUK.locale = Locale(identifier: "en-UK")
         view.addSubview(timePickerUK)
     }
 }
